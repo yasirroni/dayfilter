@@ -5,6 +5,8 @@ from datetime import timezone, timedelta
 # TODO:
 # 1. No need to make sr and ss if we already have the data
 # 2. Reimplement suntime.Sun() for speed and because it use LGPL License
+# 3. Make a class that will store latitude, longitude, and time_zone
+# 4. Embed sun to the class
 
 def are_nighttimes(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
     sun = Sun(latitude, longitude)
@@ -61,3 +63,22 @@ def ceil_date_hour(dt):
 def floor_date_hour(dt):
     # sr and ss have precision up to minute, thus ceil and floor only on hour
     return dt.replace(minute=0)
+
+def get_indices(ds, latitude, longitude, time_zone, filter='daytime', filter_params={}):
+    if filter == 'daytime':
+        f = are_daytimes
+    elif filter == 'nighttime':
+        f = are_nighttimes
+    else:
+        msg = f"Unknown value of '{filter}' for filter!"
+        raise ValueError(msg)
+    
+    return [i for i, x in enumerate(f(ds, latitude, longitude, time_zone, **filter_params)) if x]
+
+    # from itertools import compress
+    # res = f(ds, latitude, longitude, time_zone, **filter_params)
+    # return list(compress(range(len(res)), res))
+    # return compress(range(len(res)), res) # generator
+    
+    # import numpy as np
+    # return np.where(f(ds, latitude, longitude, time_zone, **filter_params))[0]
