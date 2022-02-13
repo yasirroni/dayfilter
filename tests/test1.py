@@ -1,5 +1,6 @@
 # test1a
 from datetime import datetime
+from dayfilter import is_daytime
 
 date_string = '2010-01-01-16:58:30.00000'
 date_datetime = datetime.strptime(date_string, '%Y-%m-%d-%H:%M:%S.%f')
