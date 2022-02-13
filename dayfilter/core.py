@@ -8,6 +8,53 @@ from datetime import timezone, timedelta
 # 3. Make a class that will store latitude, longitude, and time_zone
 # 4. Embed sun to the class
 
+class DayFilter():
+    def __init__(self, latitude, longitude, time_zone, strategy='daytime', ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
+        self.sun = Sun(latitude, longitude)
+        self.tz = timezone(timedelta(hours=time_zone))
+
+        if strategy == 'daytime':
+            self.f = _is_daytime
+        elif strategy == 'nighttime':
+            self.f = _is_nighttime
+        else:
+            msg = f"Unknown value of '{strategy}' for strategy!"
+            raise ValueError(msg)
+    
+        self.ceil_sr = ceil_sr,
+        self.floor_sr = floor_sr,
+        self.ceil_ss = ceil_ss, 
+        self.floor_ss = floor_ss
+
+    def filter(self, df):
+        idx = get_indices(df.index)
+        return df.iloc[idx]
+
+    def get_indices(self, ds):
+        return [i for i, x in enumerate(self.evaluate(ds)) if x]
+
+    def evaluate(self, ds):
+        return [self.f(ds_, self.sun, self.tz, self.ceil_sr, self.floor_sr, self.ceil_ss, self.floor_ss) for ds_ in ds]
+
+    def update_location(self, latitude, longitude, time_zone):
+        self.sun = Sun(latitude, longitude)
+        self.tz = timezone(timedelta(hours=time_zone))
+
+    def update_time_roundong(self, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
+        self.ceil_sr = ceil_sr,
+        self.floor_sr = floor_sr,
+        self.ceil_ss = ceil_ss, 
+        self.floor_ss = floor_ss
+
+    def update_strategy(self, strategy='daytime'):
+        if strategy == 'daytime':
+            self.f = are_daytimes
+        elif strategy == 'nighttime':
+            self.f = are_nighttimes
+        else:
+            msg = f"Unknown value of '{strategy}' for strategy!"
+            raise ValueError(msg)
+
 def are_nighttimes(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
     sun = Sun(latitude, longitude)
     tz = timezone(timedelta(hours=time_zone))
