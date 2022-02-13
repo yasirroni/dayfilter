@@ -15,7 +15,7 @@ latitude = 38.98
 longitude = -77.47
 time_zone = -5
 
-is_noon(date_datetime, latitude, longitude, time_zone)
+is_daytime(date_datetime, latitude, longitude, time_zone)
 ```
 
 ## License

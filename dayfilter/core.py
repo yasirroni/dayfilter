@@ -6,34 +6,34 @@ from datetime import timezone, timedelta
 # 1. No need to make sr and ss if we already have the data
 # 2. Reimplement suntime.Sun() for speed and because it use LGPL License
 
-def are_nights(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
+def are_nighttimes(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
     sun = Sun(latitude, longitude)
     tz = timezone(timedelta(hours=time_zone))
-    return [_is_night(ds_, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss) for ds_ in ds]
+    return [_is_nighttime(ds_, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss) for ds_ in ds]
 
-def is_night(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
+def is_nighttime(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
     sun = Sun(latitude, longitude)
     tz = timezone(timedelta(hours=time_zone))
-    return _is_night(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss)
+    return _is_nighttime(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss)
 
-def _is_night(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss):
+def _is_nighttime(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss):
     sr, ss = get_sr_ss(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss)
     if sr <= ds < ss:
         return False
     else:
         return True
 
-def are_noons(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
+def are_daytimes(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
     sun = Sun(latitude, longitude)
     tz = timezone(timedelta(hours=time_zone))
-    return [_is_noon(ds_, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss) for ds_ in ds]
+    return [_is_daytime(ds_, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss) for ds_ in ds]
 
-def is_noon(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
+def is_daytime(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
     sun = Sun(latitude, longitude)
     tz = timezone(timedelta(hours=time_zone))
-    return _is_noon(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss)
+    return _is_daytime(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss)
 
-def _is_noon(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss):
+def _is_daytime(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss):
     sr, ss = get_sr_ss(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss)
     if sr <= ds < ss:
         return True
