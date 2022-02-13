@@ -27,7 +27,7 @@ class DayFilter():
         self.floor_ss = floor_ss
 
     def filter(self, df):
-        idx = get_indices(df.index)
+        idx = self.get_indices(df.index)
         return df.iloc[idx]
 
     def get_indices(self, ds):
