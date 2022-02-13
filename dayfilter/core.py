@@ -64,13 +64,13 @@ def floor_date_hour(dt):
     # sr and ss have precision up to minute, thus ceil and floor only on hour
     return dt.replace(minute=0)
 
-def get_indices(ds, latitude, longitude, time_zone, filter='daytime', filter_params={}):
-    if filter == 'daytime':
+def get_indices(ds, latitude, longitude, time_zone, strategy='daytime', filter_params={}):
+    if strategy == 'daytime':
         f = are_daytimes
-    elif filter == 'nighttime':
+    elif strategy == 'nighttime':
         f = are_nighttimes
     else:
-        msg = f"Unknown value of '{filter}' for filter!"
+        msg = f"Unknown value of '{strategy}' for strategy!"
         raise ValueError(msg)
     
     return [i for i, x in enumerate(f(ds, latitude, longitude, time_zone, **filter_params)) if x]
