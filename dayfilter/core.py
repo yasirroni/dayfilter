@@ -9,7 +9,7 @@ from datetime import timezone, timedelta
 # 4. Embed sun to the class
 
 class DayFilter():
-    def __init__(self, latitude, longitude, time_zone, strategy='daytime', ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
+    def __init__(self, latitude, longitude, time_zone, strategy='daytime', params={}):
         self.sun = Sun(latitude, longitude)
         self.tz = timezone(timedelta(hours=time_zone))
 
@@ -18,13 +18,11 @@ class DayFilter():
         elif strategy == 'nighttime':
             self.f = _is_nighttime
         else:
-            msg = f"Unknown value of '{strategy}' for strategy!"
-            raise ValueError(msg)
-    
-        self.ceil_sr = ceil_sr,
-        self.floor_sr = floor_sr,
-        self.ceil_ss = ceil_ss, 
-        self.floor_ss = floor_ss
+            # support custom strategy
+            self.f = strategy
+        
+        # support custom parameters
+        self.params = params
 
     def filter(self, df):
         idx = self.get_indices(df.index)
@@ -34,38 +32,29 @@ class DayFilter():
         return [i for i, x in enumerate(self.evaluate(ds)) if x]
 
     def evaluate(self, ds):
-        return [self.f(ds_, self.sun, self.tz, self.ceil_sr, self.floor_sr, self.ceil_ss, self.floor_ss) for ds_ in ds]
-
-    def update_location(self, latitude, longitude, time_zone):
-        self.sun = Sun(latitude, longitude)
-        self.tz = timezone(timedelta(hours=time_zone))
-
-    def update_time_roundong(self, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
-        self.ceil_sr = ceil_sr,
-        self.floor_sr = floor_sr,
-        self.ceil_ss = ceil_ss, 
-        self.floor_ss = floor_ss
-
-    def update_strategy(self, strategy='daytime'):
-        if strategy == 'daytime':
-            self.f = are_daytimes
-        elif strategy == 'nighttime':
-            self.f = are_nighttimes
-        else:
-            msg = f"Unknown value of '{strategy}' for strategy!"
-            raise ValueError(msg)
+        return [self.f(ds_, self.sun, self.tz, **self.params) for ds_ in ds]
 
 def are_nighttimes(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
     sun = Sun(latitude, longitude)
     tz = timezone(timedelta(hours=time_zone))
     return [_is_nighttime(ds_, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss) for ds_ in ds]
 
+def are_daytimes(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
+    sun = Sun(latitude, longitude)
+    tz = timezone(timedelta(hours=time_zone))
+    return [_is_daytime(ds_, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss) for ds_ in ds]
+
 def is_nighttime(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
     sun = Sun(latitude, longitude)
     tz = timezone(timedelta(hours=time_zone))
     return _is_nighttime(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss)
 
-def _is_nighttime(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss):
+def is_daytime(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
+    sun = Sun(latitude, longitude)
+    tz = timezone(timedelta(hours=time_zone))
+    return _is_daytime(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss)
+
+def _is_nighttime(ds, sun, tz, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
     sr, ss = get_sr_ss(ds, sun, tz)
     sr = round_sr(sr, ceil_sr, floor_sr)
     ss = round_ss(ss, ceil_ss, floor_ss)
@@ -74,17 +63,7 @@ def _is_nighttime(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss):
     else:
         return True
 
-def are_daytimes(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
-    sun = Sun(latitude, longitude)
-    tz = timezone(timedelta(hours=time_zone))
-    return [_is_daytime(ds_, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss) for ds_ in ds]
-
-def is_daytime(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
-    sun = Sun(latitude, longitude)
-    tz = timezone(timedelta(hours=time_zone))
-    return _is_daytime(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss)
-
-def _is_daytime(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss):
+def _is_daytime(ds, sun, tz, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
     sr, ss = get_sr_ss(ds, sun, tz)
     sr = round_sr(sr, ceil_sr, floor_sr)
     ss = round_ss(ss, ceil_ss, floor_ss)
