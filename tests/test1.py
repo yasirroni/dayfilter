@@ -25,40 +25,42 @@ time_zone = -5
 
 f = DayFilter(latitude, longitude, time_zone)
 
-# df1
-date_strings = [
-    '2010-01-01-05:58:42.00000',
-    '2010-01-01-12:59:32.00000',
-    '2010-01-01-13:42:22.00000',
-    '2010-01-01-14:39:25.00000',
-    '2010-01-01-15:21:45.00000',
-    '2010-01-01-18:10:21.00000',
-    '2010-01-02-15:12:30.00000',
-]
-date_format = '%Y-%m-%d-%H:%M:%S.%f'
-date_datetimes = [datetime.strptime(date_string, date_format) for date_string in date_strings]
-val = [1,2,3,3,2,1]
-
-df1 = pd.DataFrame(index=date_datetimes, data=[1,2,3,3,2,1,0])
-
-df1_ = f.filter(df1)
-print(df1_)
-
-# df2
 date_strings = [
     '2010-01-01-05:58:42.00000',
     '2010-01-01-06:59:22.00000',
     '2010-01-01-13:22:23.00000',
     '2010-01-01-14:54:55.00000',
     '2010-01-01-15:31:45.00000',
-    '2010-01-02-11:12:22.00000',
+    '2010-01-02-17:12:22.00000',
     '2010-01-02-15:12:32.00000',
+    '2010-01-02-16:59:32.00000',
+    '2010-01-02-18:00:11.00000',
 ]
 date_format = '%Y-%m-%d-%H:%M:%S.%f'
 date_datetimes = [datetime.strptime(date_string, date_format) for date_string in date_strings]
-val = [1,2,3,4,5,6]
 
-df2 = pd.DataFrame(index=date_datetimes, data=[1,2,3,3,2,1,0])
+df = pd.DataFrame(index=date_datetimes, data=[1,2,3,4,5,6,7,8,9])
 
-df2_ = f.filter(df2)
-print(df2_)
+df_ = f.filter(df)
+print(df_)
+
+# test1c
+from dayfilter import DayFilter
+from dayfilter import get_sr_ss, shift_date_hour
+
+def custom_filter(ds, sun, tz):
+    sr, ss = get_sr_ss(ds, sun, tz)
+    sr = shift_date_hour(sr, hours=-1)
+    ss = shift_date_hour(ss, hours=1)
+    if sr <= ds < ss:
+        return True
+    else:
+        return False
+
+strategy = custom_filter
+params = {}
+
+f2 = DayFilter(latitude, longitude, time_zone, strategy=strategy, params=params)
+
+df__ = f2.filter(df)
+print(df__)
