@@ -66,7 +66,9 @@ def is_nighttime(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=Fal
     return _is_nighttime(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss)
 
 def _is_nighttime(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss):
-    sr, ss = get_sr_ss(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss)
+    sr, ss = get_sr_ss(ds, sun, tz)
+    sr = round_sr(sr, ceil_sr, floor_sr)
+    ss = round_ss(ss, ceil_ss, floor_ss)
     if sr <= ds < ss:
         return False
     else:
@@ -83,33 +85,47 @@ def is_daytime(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False
     return _is_daytime(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss)
 
 def _is_daytime(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss):
-    sr, ss = get_sr_ss(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss)
+    sr, ss = get_sr_ss(ds, sun, tz)
+    sr = round_sr(sr, ceil_sr, floor_sr)
+    ss = round_ss(ss, ceil_ss, floor_ss)
     if sr <= ds < ss:
         return True
     else:
         return False
 
-def get_sr_ss(ds_, sun, tz, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
+def get_sr_ss(ds_, sun, tz):
     # sr and ss have precision up to minute, thus ceil and floor only on hour
     sr = sun.get_sunrise_time(ds_).astimezone(tz).replace(tzinfo=None)
     ss = sun.get_sunset_time(ds_).astimezone(tz).replace(tzinfo=None)
-    if ceil_sr:
-        sr = ceil_date_hour(sr)
-    elif floor_sr:
-        sr = floor_date_hour(sr)
-    if ceil_ss:
-        ss = ceil_date_hour(ss)
-    elif floor_ss:
-        ss = floor_date_hour(ss)
     return sr, ss
 
-def ceil_date_hour(dt):
-    # sr and ss have precision up to minute, thus ceil and floor only on hour
-    return floor_date_hour(dt) + timedelta(hours=1)
+def round_sr(sr, ceil_sr=False, floor_sr=False):
+    if ceil_sr:
+        return ceil_date_hour(sr)
+    elif floor_sr:
+        return floor_date_hour(sr)
+    return sr
 
-def floor_date_hour(dt):
+def round_ss(ss, ceil_ss=False, floor_ss=False):
+    if ceil_ss:
+        return ceil_date_hour(ss)
+    elif floor_ss:
+        return floor_date_hour(ss)
+    return ss
+
+def ceil_date_hour(dt, hours=1):
     # sr and ss have precision up to minute, thus ceil and floor only on hour
-    return dt.replace(minute=0)
+    return floor_date_hour(dt) + timedelta(hours=hours)
+
+def floor_date_hour(dt, hours=None):
+    # sr and ss have precision up to minute, thus ceil and floor only on hour
+    if hours:
+        return dt.replace(minute=0) - timedelta(hours=hours)
+    else:
+        return dt.replace(minute=0)
+
+def shift_date_hour(dt, hours=1):
+    return dt + timedelta(hours=hours)
 
 def get_indices(ds, latitude, longitude, time_zone, strategy='daytime', filter_params={}):
     if strategy == 'daytime':

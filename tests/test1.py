@@ -10,7 +10,8 @@ latitude = 38.98
 longitude = -77.47
 time_zone = -5
 
-is_daytime(date_datetime, latitude, longitude, time_zone)
+daytime = is_daytime(date_datetime, latitude, longitude, time_zone)
+print(daytime)
 
 # test1b
 from dayfilter import DayFilter
@@ -41,6 +42,7 @@ val = [1,2,3,3,2,1]
 df1 = pd.DataFrame(index=date_datetimes, data=[1,2,3,3,2,1,0])
 
 df1_ = f.filter(df1)
+print(df1_)
 
 # df2
 date_strings = [
@@ -59,3 +61,4 @@ val = [1,2,3,4,5,6]
 df2 = pd.DataFrame(index=date_datetimes, data=[1,2,3,3,2,1,0])
 
 df2_ = f.filter(df2)
+print(df2_)
