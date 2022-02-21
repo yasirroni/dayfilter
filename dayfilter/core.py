@@ -2,6 +2,8 @@ import pytz
 from suntime import Sun
 from datetime import timezone, timedelta
 
+from .logic import logic_daytime, logic_nighttime
+
 # TODO:
 # 1. No need to make sr and ss if we already have the data
 # 2. Reimplement suntime.Sun() for speed and because it use LGPL License
@@ -9,20 +11,32 @@ from datetime import timezone, timedelta
 # 4. Embed sun to the class
 
 class DayFilter():
-    def __init__(self, latitude, longitude, time_zone, strategy='daytime', params={}):
+    def __init__(self, latitude, longitude, time_zone, post_process=None, logic='daytime'):
+        """
+        Args:
+            latitude (int or float): 
+                latitude in degree
+            longitude (int or float):
+                longitude in degree
+            time_zone (int): 
+                time zone from UTC
+            post_process (list[function], optional): 
+                list of function to post processing sunrise and suntime. Defaults to None.
+            logic (str or function, optional): 
+                strategy to evaluate. Defaults to 'daytime'.
+        """
         self.sun = Sun(latitude, longitude)
         self.tz = timezone(timedelta(hours=time_zone))
 
-        if strategy == 'daytime':
-            self.f = _is_daytime
-        elif strategy == 'nighttime':
-            self.f = _is_nighttime
+        self.post_processes = post_processes
+
+        if logic == 'daytime':
+            self.logic = logic_daytime
+        elif logic == 'nighttime':
+            self.logic = logic_nighttime
         else:
-            # support custom strategy
-            self.f = strategy
-        
-        # support custom parameters
-        self.params = params
+            # support custom logic
+            self.logic = logic
 
     def filter(self, df):
         idx = self.get_indices(df.index)
@@ -32,95 +46,60 @@ class DayFilter():
         return [i for i, x in enumerate(self.evaluate(ds)) if x]
 
     def evaluate(self, ds):
-        return [self.f(ds_, self.sun, self.tz, **self.params) for ds_ in ds]
+        return [self.evaluate_(ds_, self.sun, self.tz) for ds_ in ds]
 
-def are_nighttimes(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
+    def evaluate_():
+        this_date = (ds.year, ds.month, ds.day)
+        if  self.saved_date != this_date:
+            # save date
+            self.saved_date = (ds.year, ds.month, ds.day)
+
+            # get default sr and ss
+            self.sr_, self.ss_ = get_sr_ss(ds, sun, tz)
+            
+            # post_process
+            if self.post_processes is not None:
+                for pp in self.post_process:
+                    self.sr_, self.ss_ = pp([self.sr_, self.ss_])
+
+        return self.logic((self.sr_, self.ss_, ds))
+
+def are_nighttimes(ds, latitude, longitude, time_zone, params={}):
     sun = Sun(latitude, longitude)
     tz = timezone(timedelta(hours=time_zone))
-    return [_is_nighttime(ds_, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss) for ds_ in ds]
+    return [_is_nighttime(ds_, sun, tz, **params) for ds_ in ds]
 
-def are_daytimes(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
+def are_daytimes(ds, latitude, longitude, time_zone, params={}):
     sun = Sun(latitude, longitude)
     tz = timezone(timedelta(hours=time_zone))
-    return [_is_daytime(ds_, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss) for ds_ in ds]
+    return [_is_daytime(ds_, sun, tz, **params) for ds_ in ds]
 
-def is_nighttime(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
+def is_nighttime(ds, latitude, longitude, time_zone, params={}):
     sun = Sun(latitude, longitude)
     tz = timezone(timedelta(hours=time_zone))
-    return _is_nighttime(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss)
+    return _is_nighttime(ds, sun, tz, **params)
 
-def is_daytime(ds, latitude, longitude, time_zone, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
+def is_daytime(ds, latitude, longitude, time_zone, params={}):
     sun = Sun(latitude, longitude)
     tz = timezone(timedelta(hours=time_zone))
-    return _is_daytime(ds, sun, tz, ceil_sr, floor_sr, ceil_ss, floor_ss)
+    return _is_daytime(ds, sun, tz, **params)
 
-def _is_nighttime(ds, sun, tz, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
+def _is_nighttime(ds, sun, tz, post_process=None):
     sr, ss = get_sr_ss(ds, sun, tz)
-    sr = round_sr(sr, ceil_sr, floor_sr)
-    ss = round_ss(ss, ceil_ss, floor_ss)
-    if sr <= ds < ss:
-        return False
-    else:
-        return True
+    if post_process is not None:
+        for pp in post_process:
+                sr, ss = pp([sr, ss])
+    return logic_nighttime
 
-def _is_daytime(ds, sun, tz, ceil_sr=False, floor_sr=False, ceil_ss=False, floor_ss=False):
+def _is_daytime(ds, sun, tz, post_process=None):
     sr, ss = get_sr_ss(ds, sun, tz)
-    sr = round_sr(sr, ceil_sr, floor_sr)
-    ss = round_ss(ss, ceil_ss, floor_ss)
-    if sr <= ds < ss:
-        return True
-    else:
-        return False
+    if post_process is not None:
+        for pp in post_process:
+                sr, ss = pp([sr, ss])
+    return logic_daytime
 
 def get_sr_ss(ds_, sun, tz):
     # sr and ss have precision up to minute, thus ceil and floor only on hour
     sr = sun.get_sunrise_time(ds_).astimezone(tz).replace(tzinfo=None)
     ss = sun.get_sunset_time(ds_).astimezone(tz).replace(tzinfo=None)
     return sr, ss
-
-def round_sr(sr, ceil_sr=False, floor_sr=False):
-    if ceil_sr:
-        return ceil_date_hour(sr)
-    elif floor_sr:
-        return floor_date_hour(sr)
-    return sr
-
-def round_ss(ss, ceil_ss=False, floor_ss=False):
-    if ceil_ss:
-        return ceil_date_hour(ss)
-    elif floor_ss:
-        return floor_date_hour(ss)
-    return ss
-
-def ceil_date_hour(dt, hours=1):
-    # sr and ss have precision up to minute, thus ceil and floor only on hour
-    return floor_date_hour(dt) + timedelta(hours=hours)
-
-def floor_date_hour(dt, hours=None):
-    # sr and ss have precision up to minute, thus ceil and floor only on hour
-    if hours:
-        return dt.replace(minute=0) - timedelta(hours=hours)
-    else:
-        return dt.replace(minute=0)
-
-def shift_date_hour(dt, hours=1):
-    return dt + timedelta(hours=hours)
-
-def get_indices(ds, latitude, longitude, time_zone, strategy='daytime', filter_params={}):
-    if strategy == 'daytime':
-        f = are_daytimes
-    elif strategy == 'nighttime':
-        f = are_nighttimes
-    else:
-        msg = f"Unknown value of '{strategy}' for strategy!"
-        raise ValueError(msg)
-    
-    return [i for i, x in enumerate(f(ds, latitude, longitude, time_zone, **filter_params)) if x]
-
-    # from itertools import compress
-    # res = f(ds, latitude, longitude, time_zone, **filter_params)
-    # return list(compress(range(len(res)), res))
-    # return compress(range(len(res)), res) # generator
-    
-    # import numpy as np
-    # return np.where(f(ds, latitude, longitude, time_zone, **filter_params))[0]
