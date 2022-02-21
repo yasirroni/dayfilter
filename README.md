@@ -65,21 +65,10 @@ Adcanced use of `DayFilter` class with custom filter
 
 ```python
 from dayfilter import DayFilter
-from dayfilter import get_sr_ss, shift_date_hour
+from dayfilter.post_process import shift_sr_down, shift_ss_up
+from dayfilter.logic import logic_daytime
 
-def custom_filter(ds, sun, tz):
-    sr, ss = get_sr_ss(ds, sun, tz)
-    sr = shift_date_hour(sr, hours=-1)
-    ss = shift_date_hour(ss, hours=1)
-    if sr <= ds < ss:
-        return True
-    else:
-        return False
-
-strategy = custom_filter
-params = {}
-
-f2 = DayFilter(latitude, longitude, time_zone, strategy=strategy, params=params)
+f2 = DayFilter(latitude, longitude, time_zone, post_processes=[shift_sr_down, shift_ss_up], logic=logic_daytime)
 
 df__ = f2.filter(df)
 print(df__)
