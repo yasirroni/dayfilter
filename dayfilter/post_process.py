@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 def ceil_sr(inp):
     """
     Args:

@@ -23,8 +23,6 @@ latitude = 38.98
 longitude = -77.47
 time_zone = -5
 
-f = DayFilter(latitude, longitude, time_zone)
-
 date_strings = [
     '2010-01-01-05:58:42.00000',
     '2010-01-01-06:59:22.00000',
@@ -41,26 +39,16 @@ date_datetimes = [datetime.strptime(date_string, date_format) for date_string in
 
 df = pd.DataFrame(index=date_datetimes, data=[1,2,3,4,5,6,7,8,9])
 
+f = DayFilter(latitude, longitude, time_zone)
 df_ = f.filter(df)
 print(df_)
 
 # test1c
 from dayfilter import DayFilter
-from dayfilter import get_sr_ss, shift_date_hour
+from dayfilter.post_process import shift_sr_down, shift_ss_up
+from dayfilter.logic import logic_daytime
 
-def custom_filter(ds, sun, tz):
-    sr, ss = get_sr_ss(ds, sun, tz)
-    sr = shift_date_hour(sr, hours=-1)
-    ss = shift_date_hour(ss, hours=1)
-    if sr <= ds < ss:
-        return True
-    else:
-        return False
-
-strategy = custom_filter
-params = {}
-
-f2 = DayFilter(latitude, longitude, time_zone, strategy=strategy, params=params)
+f2 = DayFilter(latitude, longitude, time_zone, post_processes=[shift_sr_down, shift_ss_up], logic=logic_daytime)
 
 df__ = f2.filter(df)
 print(df__)

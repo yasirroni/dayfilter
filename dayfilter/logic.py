@@ -7,9 +7,9 @@ def logic_daytime(inp):
         bool: True or False
     """
     if inp[0] <= inp[2] < inp[1]:
-        return False
-    else:
         return True
+    else:
+        return False
 
 def logic_nighttime(sr, ss, ds):
     """

@@ -11,7 +11,7 @@ from .logic import logic_daytime, logic_nighttime
 # 4. Embed sun to the class
 
 class DayFilter():
-    def __init__(self, latitude, longitude, time_zone, post_process=None, logic='daytime'):
+    def __init__(self, latitude, longitude, time_zone, post_processes=None, logic='daytime'):
         """
         Args:
             latitude (int or float): 
@@ -20,7 +20,7 @@ class DayFilter():
                 longitude in degree
             time_zone (int): 
                 time zone from UTC
-            post_process (list[function], optional): 
+            post_processes (list[function], optional): 
                 list of function to post processing sunrise and suntime. Defaults to None.
             logic (str or function, optional): 
                 strategy to evaluate. Defaults to 'daytime'.
@@ -38,6 +38,11 @@ class DayFilter():
             # support custom logic
             self.logic = logic
 
+        # initials
+        self.saved_date = None
+        self.sr_ = None
+        self.ss_ = None
+
     def filter(self, df):
         idx = self.get_indices(df.index)
         return df.iloc[idx]
@@ -48,7 +53,7 @@ class DayFilter():
     def evaluate(self, ds):
         return [self.evaluate_(ds_, self.sun, self.tz) for ds_ in ds]
 
-    def evaluate_():
+    def evaluate_(self, ds, sun, tz):
         this_date = (ds.year, ds.month, ds.day)
         if  self.saved_date != this_date:
             # save date
@@ -57,11 +62,12 @@ class DayFilter():
             # get default sr and ss
             self.sr_, self.ss_ = get_sr_ss(ds, sun, tz)
             
-            # post_process
+            # post_processes
             if self.post_processes is not None:
-                for pp in self.post_process:
+                for pp in self.post_processes:
                     self.sr_, self.ss_ = pp([self.sr_, self.ss_])
 
+        print(self.sr_, self.ss_)
         return self.logic((self.sr_, self.ss_, ds))
 
 def are_nighttimes(ds, latitude, longitude, time_zone, params={}):
@@ -84,19 +90,19 @@ def is_daytime(ds, latitude, longitude, time_zone, params={}):
     tz = timezone(timedelta(hours=time_zone))
     return _is_daytime(ds, sun, tz, **params)
 
-def _is_nighttime(ds, sun, tz, post_process=None):
+def _is_nighttime(ds, sun, tz, post_processes=None):
     sr, ss = get_sr_ss(ds, sun, tz)
-    if post_process is not None:
-        for pp in post_process:
+    if post_processes is not None:
+        for pp in post_processes:
                 sr, ss = pp([sr, ss])
-    return logic_nighttime
+    return logic_nighttime((sr_, ss_, ds))
 
-def _is_daytime(ds, sun, tz, post_process=None):
+def _is_daytime(ds, sun, tz, post_processes=None):
     sr, ss = get_sr_ss(ds, sun, tz)
-    if post_process is not None:
-        for pp in post_process:
+    if post_processes is not None:
+        for pp in post_processes:
                 sr, ss = pp([sr, ss])
-    return logic_daytime
+    return logic_daytime((sr, ss, ds))
 
 def get_sr_ss(ds_, sun, tz):
     # sr and ss have precision up to minute, thus ceil and floor only on hour
