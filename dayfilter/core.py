@@ -67,7 +67,6 @@ class DayFilter():
                 for pp in self.post_processes:
                     self.sr_, self.ss_ = pp([self.sr_, self.ss_])
 
-        print(self.sr_, self.ss_)
         return self.logic((self.sr_, self.ss_, ds))
 
 def are_nighttimes(ds, latitude, longitude, time_zone, params={}):
