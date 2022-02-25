@@ -8,6 +8,15 @@ Filter time-series based on sun movement
 pip install dayfilter
 ```
 
+DayFilter depends on [suntime](https://github.com/SatAgro/suntime). Due to known [issue](https://github.com/SatAgro/suntime/issues/12) of suntime, you can use my fork of suntime on test-pypi. To install, use:
+
+```plaintext
+pip uninstall suntime
+pip install -i https://test.pypi.org/simple/ suntime-yasirroni
+```
+
+I can't bundle my fork of suntime into DayFilter due to LICENSE incompatibility issue.
+
 ## Usage
 
 Simple use case of getting `list` of `bool`
