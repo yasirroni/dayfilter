@@ -82,9 +82,12 @@ f2 = DayFilter(latitude, longitude, time_zone, post_processes=[shift_sr_down, sh
 df__ = f2.filter(df)
 print(df__)
 ```
+
 ## TODO
 
 1. Consider refactor to astral due to suntime LICENSE.
+    a. Astral is slower and have same bug with the original suntime
+    b. Soulution of the suntime bug exist on yasirroni/suntime
 
 ## License
 
