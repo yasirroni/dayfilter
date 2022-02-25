@@ -82,7 +82,9 @@ f2 = DayFilter(latitude, longitude, time_zone, post_processes=[shift_sr_down, sh
 df__ = f2.filter(df)
 print(df__)
 ```
+## TODO
 
+1. Consider refactor to astral due to suntime LICENSE.
 
 ## License
 
