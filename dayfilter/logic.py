@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 def logic_daytime(inp):
     """
     Args:
@@ -6,7 +8,10 @@ def logic_daytime(inp):
     Returns:
         bool: True or False
     """
-    if inp[0] <= inp[2] < inp[1]:
+    sunrise = timedelta(hours=inp[0].hour, minutes=inp[0].minute)
+    sunset = timedelta(hours=inp[1].hour, minutes=inp[1].minute)
+    time = timedelta(hours=inp[2].hour, minutes=inp[2].minute)
+    if sunrise <= time < sunset:
         return True
     else:
         return False
@@ -19,7 +24,10 @@ def logic_nighttime(sr, ss, ds):
     Returns:
         bool: True or False
     """
-    if inp[0] <= inp[2] < inp[1]:
+    sunrise = timedelta(hours=inp[0].hour, minutes=inp[0].minute)
+    sunset = timedelta(hours=inp[1].hour, minutes=inp[1].minute)
+    time = timedelta(hours=inp[2].hour, minutes=inp[2].minute)
+    if sunrise <= time < sunset:
         return False
     else:
         return True
