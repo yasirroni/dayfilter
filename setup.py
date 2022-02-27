@@ -29,7 +29,6 @@ setuptools.setup(
     ],
     python_requires = '>3.6',
     install_requires = [
-        "suntime>=1.2.0",
         "pytz>=2020.1"
     ],
 )

@@ -105,6 +105,6 @@ def _is_daytime(ds, sun, tz, post_processes=None):
 
 def get_sr_ss(ds_, sun, tz):
     # sr and ss have precision up to minute, thus ceil and floor only on hour
-    sr = sun.get_sunrise_time(ds_).astimezone(tz).replace(tzinfo=None)
-    ss = sun.get_sunset_time(ds_).astimezone(tz).replace(tzinfo=None)
+    sr = sun.get_sunrise_time(ds_, tz=tz).replace(tzinfo=None)
+    ss = sun.get_sunset_time(ds_, tz=tz).replace(tzinfo=None)
     return sr, ss

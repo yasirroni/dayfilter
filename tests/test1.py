@@ -1,6 +1,6 @@
 # test1a
 from datetime import datetime
-from dayfilter import is_daytime
+from dayfilter import is_daytime, get_sr_ss
 
 date_string = '2010-01-01-16:58:30.00000'
 date_datetime = datetime.strptime(date_string, '%Y-%m-%d-%H:%M:%S.%f')
@@ -14,7 +14,7 @@ daytime = is_daytime(date_datetime, latitude, longitude, time_zone)
 print(daytime)
 
 # test1b
-from dayfilter import DayFilter
+from dayfilter import DayFilter, get_sr_ss
 import pandas as pd
 from datetime import datetime
 
@@ -43,8 +43,12 @@ f = DayFilter(latitude, longitude, time_zone)
 df_ = f.filter(df)
 print(df_)
 
+sr, ss = get_sr_ss(df.index[0], f.sun, f.tz)
+print(f"Sunrise at {sr}")
+print(f"Sunset at {ss}")
+
 # test1c
-from dayfilter import DayFilter
+from dayfilter import DayFilter, get_sr_ss
 from dayfilter.post_process import shift_sr_down, shift_ss_up
 from dayfilter.logic import logic_daytime
 
@@ -52,3 +56,15 @@ f2 = DayFilter(latitude, longitude, time_zone, post_processes=[shift_sr_down, sh
 
 df__ = f2.filter(df)
 print(df__)
+
+sr, ss = get_sr_ss(df__.index[0], f2.sun, f2.tz)
+for pp in f2.post_processes:
+    sr, ss = pp([sr, ss])
+print(f"Sunrise at {sr}")
+print(f"Sunset at {ss}")
+
+sr, ss = get_sr_ss(df__.index[-1], f2.sun, f2.tz)
+for pp in f2.post_processes:
+    sr, ss = pp([sr, ss])
+print(f"Sunrise at {sr}")
+print(f"Sunset at {ss}")
