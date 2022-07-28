@@ -40,8 +40,8 @@ class DayFilter():
 
         # initials
         self.saved_date = None
-        self.sr_ = None
-        self.ss_ = None
+        self._sr = None
+        self._ss = None
 
     def filter(self, df):
         idx = self.get_indices(df.index)
@@ -51,29 +51,31 @@ class DayFilter():
         return [i for i, x in enumerate(self.evaluate(ds)) if x]
 
     def evaluate(self, ds):
+        # TODO: only use up YEAR-MONTH-DAY to support RLU cache
         return [self.evaluate_(ds_, self.sun, self.tz) for ds_ in ds]
 
     def evaluate_(self, ds, sun, tz):
+        # TODO: use RLU cache
         this_date = (ds.year, ds.month, ds.day)
         if  self.saved_date != this_date:
             # save date
             self.saved_date = (ds.year, ds.month, ds.day)
 
             # get default sr and ss
-            self.sr_, self.ss_ = get_sr_ss(ds, sun, tz)
+            self._sr, self._ss = get_sr_ss(ds, sun, tz)
             
             # post_processes
             if self.post_processes is not None:
                 for pp in self.post_processes:
-                    self.sr_, self.ss_ = pp([self.sr_, self.ss_])
+                    self._sr, self._ss = pp([self._sr, self._ss])
 
-        return self.logic((self.sr_, self.ss_, ds))
+        return self.logic((self._sr, self._ss, ds))
 
-    def get_sr_ss(self, ds_, post_processes=False):
+    def get_sr_ss(self, ds_, use_post_processes=False):
         # NOTE: there are two `get_sr_ss`, method of DayFilter and a separate function
         sr, ss = get_sr_ss(ds_, self.sun, self.tz)
 
-        if post_processes:
+        if use_post_processes:
             if self.post_processes is not None:
                 for pp in self.post_processes:
                     sr, ss = pp([sr, ss])
@@ -107,7 +109,7 @@ def _is_nighttime(ds, sun, tz, post_processes=None):
     if post_processes is not None:
         for pp in post_processes:
                 sr, ss = pp([sr, ss])
-    return logic_nighttime((sr_, ss_, ds))
+    return logic_nighttime((_sr, _ss, ds))
 
 def _is_daytime(ds, sun, tz, post_processes=None):
     sr, ss = get_sr_ss(ds, sun, tz)
