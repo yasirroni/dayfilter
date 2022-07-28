@@ -1,3 +1,5 @@
+# TODO: Write proper test
+
 # test1a
 from datetime import datetime
 from dayfilter import is_daytime, get_sr_ss
@@ -11,7 +13,7 @@ longitude = -77.47
 time_zone = -5
 
 daytime = is_daytime(date_datetime, latitude, longitude, time_zone)
-print(daytime)
+print(daytime)  # expected to be False, Sunrise at 2010-01-01 07:28:48, Sunset at 2010-01-01 16:58:12 
 
 # test1b
 from dayfilter import DayFilter, get_sr_ss

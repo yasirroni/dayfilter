@@ -69,6 +69,18 @@ class DayFilter():
 
         return self.logic((self.sr_, self.ss_, ds))
 
+    def get_sr_ss(self, ds_, post_processes=False):
+        sr, ss = get_sr_ss(ds_, self.sun, self.tz)
+
+        if post_processes:
+            if self.post_processes is not None:
+                for pp in self.post_processes:
+                    sr, ss = pp([sr, ss])
+            else:
+                print('No post_process defined but called by get_sr_ss')
+
+        return sr, ss
+
 def are_nighttimes(ds, latitude, longitude, time_zone, params={}):
     sun = Sun(latitude, longitude)
     tz = timezone(timedelta(hours=time_zone))

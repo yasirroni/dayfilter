@@ -81,6 +81,9 @@ f2 = DayFilter(latitude, longitude, time_zone, post_processes=[shift_sr_down, sh
 
 df__ = f2.filter(df)
 print(df__)
+
+print(f.get_sr_ss(df_.index[0]))
+print(f.get_sr_ss(df_.index[0], post_processes=True))
 ```
 
 ## TODO
