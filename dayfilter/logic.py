@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+# TODO: add logic for open and close intervals
 def logic_daytime(inp):
     """
     Args:
